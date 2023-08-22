@@ -8,9 +8,9 @@ readme = "README.md"
 packages = [{include = "concourse_dnf"}]
 
 [tool.poetry.scripts]
-check = 'concourse_dnf.cli:check'
-in = 'concourse_dnf.cli:in'
-out = 'concourse_dnf.cli:out'
+check = 'concourse_dnf.cli:resource_check'
+in = 'concourse_dnf.cli:resource_in'
+out = 'concourse_dnf.cli:resource_out'
 
 
 [tool.poetry.dependencies]
