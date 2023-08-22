@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "concourse-dnf"
+version = "0.1.0"
+description = "Concourse resource to track changes within dnf/yum repositories"
+authors = ["Nic Anderson <nic@nic-a.net>"]
+license = "Apache-2.0"
+readme = "README.md"
+packages = [{include = "concourse_dnf"}]
+
+[tool.poetry.scripts]
+check = 'concourse_dnf.cli:check'
+in = 'concourse_dnf.cli:in'
+out = 'concourse_dnf.cli:out'
+
+
+[tool.poetry.dependencies]
+python = "^3.11"
+requests = "^2.31.0"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.7.0"
+isort = "^5.12.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
