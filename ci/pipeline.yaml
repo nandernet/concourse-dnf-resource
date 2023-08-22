@@ -1,0 +1,81 @@
+resources:
+  - name: concourse-dnf-source
+    type: git
+    icon: github
+    source:
+      uri: https://github.com/nanderson94/concourse-dnf-resource.git
+      branch: mainline
+  - name: fedora-image
+    type: registry-image
+    check_every: 24h
+    icon: docker
+    source:
+      repository: quay.io/fedora/fedora-minimal
+      tag: latest
+  - name: concourse-dnf-image-gitea
+    type: registry-image
+    icon: docker
+    source:
+      repository: git.nic-a.net/nic/concourse-dnf-resource
+      username: ((docker.user)
+      password: ((docker.token))
+  - name: concourse-dnf-image-dockerhub
+    type: registry-image
+    icon: docker
+    source:
+      repository: docker.io/nandernet/concourse-dnf-resource
+      username: ((dockerhub.user))
+      password: ((dockerhub.token))
+  - name: concourse-dnf-image-github
+    type: registry-image
+    icon: docker
+    source:
+      repository: ghcr.io/nanderson94/concourse-dnf-resource
+      username: ((github.user))
+      password: ((github.token))
+
+jobs:
+  - name: build-and-push-images
+    public: true
+    plan:
+    - in_parallel:
+      - get: concourse-dnf-source
+        trigger: true
+      - get: fedora-image
+        trigger: true
+    - task: build-image
+      privileged: true
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source:
+            repository: concourse/oci-build-task
+        inputs:
+          - name: concourse-dnf-source
+        outputs:
+          - name: image
+        caches:
+          - path: cache
+        params:
+          CONTEXT: concourse-dnf-source/
+          DOCKERFILE: concourse-dnf-source/Dockerfile
+          BUILD_ARG_VER: "0.1.0"
+        run:
+          path: build
+    - in_parallel:
+      - put: concourse-dnf-image-gitea
+        params:
+          bump_aliases: true
+          image: image/image.tar
+          version: "0.1.0"
+      - put: concourse-dnf-image-dockerhub
+        params:
+          bump_aliases: true
+          image: image/image.tar
+          version: "0.1.0"
+      - put: concourse-dnf-image-github
+        params:
+          bump_aliases: true
+          image: image/image.tar
+          version: "0.1.0"

@@ -2,6 +2,7 @@ import argparse
 import gzip
 import json
 import logging
+import sys
 import xml.etree.ElementTree as ET
 from typing import Dict, List
 from xml.etree.ElementTree import Element
@@ -79,10 +80,42 @@ def parse_args():
     return parser.parse_args()
 
 
-def check() -> None:
-    args = parse_args()
-    print(json.dumps(fetch_repodata(args.repo, args.package)))
+def parse_stdin():
+    config = json.load(sys.stdin)
+
+    package = config.get("source", {}).get("package")
+    if not package:
+        sys.stderr.write("Mandatory argument 'package' not defined")
+        sys.exit(1)
+
+    repos = config.get("source", {}).get("repositories")
+    if not repos or len(repos) == 0:
+        sys.stderr.write("Mandatory argument 'repositories' not defined")
+        sys.exit(1)
+
+    return repos, package
+
+
+def resource_check() -> None:
+    repos, package = parse_stdin()
+
+    sys.stdout.write(json.dumps(fetch_repodata(repos, package)))
+
+
+def resource_in() -> None:
+    repos, package = parse_stdin()
+    sys.stderr.write("Not fully supported yet")
+    sys.stdout.write(
+        json.dumps({"version": fetch_repodata(repos, package), "metadata": []})
+    )
+
+
+def resource_out() -> None:
+    repos, packages = parse_stdin()
+    sys.stderr.write("Unsupported action")
+    sys.exit(1)
 
 
 if __name__ == "__main__":
-    check()
+    args = parse_args()
+    print(json.dumps(fetch_repodata(args.repo, args.package)))
