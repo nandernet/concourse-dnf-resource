@@ -62,21 +62,22 @@ jobs:
           DOCKERFILE: concourse-dnf-source/Dockerfile
           BUILD_ARG_VER: "0.1.0"
           IMAGE_PLATFORM: linux/amd64,linux/arm64
+          OUTPUT_OCI: true
         run:
           path: build
     - in_parallel:
       - put: concourse-dnf-image-gitea
         params:
           bump_aliases: true
-          image: image/image.tar
+          image: image/image
           version: "0.1.0"
       - put: concourse-dnf-image-dockerhub
         params:
           bump_aliases: true
-          image: image/image.tar
+          image: image/image
           version: "0.1.0"
       - put: concourse-dnf-image-github
         params:
           bump_aliases: true
-          image: image/image.tar
+          image: image/image
           version: "0.1.0"

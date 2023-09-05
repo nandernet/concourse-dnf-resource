@@ -106,7 +106,7 @@ def resource_in() -> None:
     repos, package = parse_stdin()
     sys.stderr.write("Not fully supported yet")
     sys.stdout.write(
-        json.dumps({"version": fetch_repodata(repos, package), "metadata": []})
+        json.dumps({"version": fetch_repodata(repos, package)[-1], "metadata": []})
     )
 
 
