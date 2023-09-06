@@ -12,6 +12,21 @@ import requests
 log = logging.getLogger(__name__)
 
 
+# https://stackoverflow.com/a/54985647/877983
+def rpm_sort(elements):
+    """ sort list elements using 'natural sorting': 1.10 > 1.9 etc...
+        taking into account special characters for rpm (~) """
+
+    alphabet = "~0123456789abcdefghijklmnopqrstuvwxyz-."
+
+    def convert(text):
+        return [int(text)] if text.isdigit() else ([alphabet.index(letter) for letter in text.lower()] if text else [1])
+
+    def alphanum_key(key):
+        return [convert(c) for c in re.split('([0-9]+)', key)]
+    return sorted(elements, key=alphanum_key)
+
+
 def fetch_primary(baseurl) -> str:
     repomd_ns = {
         "repo": "http://linux.duke.edu/metadata/repo",
@@ -60,7 +75,7 @@ def fetch_repodata(repos: List[str], package: str) -> List[Dict[str, str]]:
                         )
                     }
                 )
-    return packages
+    return rpm_sort(packages)
 
 
 def parse_args():

@@ -1,3 +1,10 @@
+resource_types:
+  - name: dnf-resource
+    type: registry-image
+    source:
+      repository: ghcr.io/nanderson94/concourse-dnf-resource
+      tag: latest
+
 resources:
   - name: concourse-dnf-source
     type: git
@@ -12,6 +19,15 @@ resources:
     source:
       repository: quay.io/fedora/fedora-minimal
       tag: latest
+  - name: dnf-python
+    type: dnf-resource
+    check_every: 4h
+    icon: package-up
+    source:
+      repositories:
+        - https://ftp-chi.osuosl.org/pub/fedora/linux/releases/38/Everything/x86_64/os/
+        - https://ftp-chi.osuosl.org/pub/fedora/linux/updates/38/Everything/x86_64/
+      package: python3
   - name: concourse-dnf-image-gitea
     type: registry-image
     icon: docker
@@ -33,6 +49,13 @@ resources:
       repository: ghcr.io/nanderson94/concourse-dnf-resource
       username: ((github.user))
       password: ((github.token))
+  - name: concourse-dnf-image-quay
+    type: registry-image
+    icon: docker
+    source:
+      repository: quay.io/nandernet/concourse-dnf-resource
+      username: ((quayio.user))
+      password: ((quayio.token))
 
 jobs:
   - name: build-and-push-images
@@ -42,6 +65,8 @@ jobs:
       - get: concourse-dnf-source
         trigger: true
       - get: fedora-image
+        trigger: true
+      - get: dnf-python
         trigger: true
     - task: build-image
       privileged: true
@@ -77,6 +102,11 @@ jobs:
           image: image/image
           version: "0.1.0"
       - put: concourse-dnf-image-github
+        params:
+          bump_aliases: true
+          image: image/image
+          version: "0.1.0"
+      - put: concourse-dnf-image-quay
         params:
           bump_aliases: true
           image: image/image
