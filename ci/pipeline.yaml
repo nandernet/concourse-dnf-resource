@@ -2,7 +2,7 @@ resource_types:
   - name: dnf-resource
     type: registry-image
     source:
-      repository: ghcr.io/nanderson94/concourse-dnf-resource
+      repository: ghcr.io/nandernet/concourse-dnf-resource
       tag: latest
 
 resources:
@@ -10,7 +10,7 @@ resources:
     type: git
     icon: github
     source:
-      uri: https://github.com/nanderson94/concourse-dnf-resource.git
+      uri: https://github.com/nandernet/concourse-dnf-resource.git
       branch: mainline
   - name: fedora-image
     type: registry-image
@@ -46,7 +46,7 @@ resources:
     type: registry-image
     icon: docker
     source:
-      repository: ghcr.io/nanderson94/concourse-dnf-resource
+      repository: ghcr.io/nandernet/concourse-dnf-resource
       username: ((github.user))
       password: ((github.token))
   - name: concourse-dnf-image-quay
