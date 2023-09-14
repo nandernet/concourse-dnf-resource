@@ -18,7 +18,7 @@ def rpm_sort(elements):
     """ sort list elements using 'natural sorting': 1.10 > 1.9 etc...
         taking into account special characters for rpm (~) """
 
-    alphabet = "~0123456789abcdefghijklmnopqrstuvwxyz-."
+    alphabet = "~0123456789abcdefghijklmnopqrstuvwxyz:-."
 
     def convert(text):
         return [int(text)] if text.isdigit() else ([alphabet.index(letter) for letter in text.lower()] if text else [1])
@@ -48,6 +48,10 @@ def fetch_primary(baseurl) -> str:
             return baseurl + entry.find("repo:location", repomd_ns).attrib.get("href")
 
 
+def ref_wrap(packages):
+    return [{"ref": pkg} for pkg in packages]
+
+
 def fetch_repodata(repos: List[str], package: str) -> List[Dict[str, str]]:
     primary_ns = {
         "common": "http://linux.duke.edu/metadata/common",
@@ -67,16 +71,14 @@ def fetch_repodata(repos: List[str], package: str) -> List[Dict[str, str]]:
             pkg_version = pkg.find("common:version", primary_ns).attrib
             if pkg_name == package:
                 packages.append(
-                    {
-                        "ref": "{}:{}-{}-{}".format(
+                        "{}:{}-{}-{}".format(
                             pkg_name,
                             pkg_version.get("epoch", 0),
                             pkg_version.get("ver"),
                             pkg_version.get("rel"),
                         )
-                    }
                 )
-    return rpm_sort(packages)
+    return ref_wrap(rpm_sort(packages))
 
 
 def parse_args():
