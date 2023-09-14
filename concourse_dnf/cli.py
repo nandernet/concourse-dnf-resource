@@ -60,6 +60,7 @@ def fetch_repodata(repos: List[str], package: str) -> List[Dict[str, str]]:
     packages = []
 
     for repo in repos:
+        sys.stderr.write(f"Searching for '{package}' in '{repo}'...\n")
         primary_path = fetch_primary(repo)
 
         primary_r = requests.get(primary_path)
@@ -70,15 +71,15 @@ def fetch_repodata(repos: List[str], package: str) -> List[Dict[str, str]]:
             pkg_name = pkg.find("common:name", primary_ns).text
             pkg_version = pkg.find("common:version", primary_ns).attrib
             if pkg_name == package:
-                packages.append(
-                        "{}:{}-{}-{}".format(
+                nerva = "{}:{}-{}-{}".format(
                             pkg_name,
                             pkg_version.get("epoch", 0),
                             pkg_version.get("ver"),
                             pkg_version.get("rel"),
-                        )
                 )
-    return ref_wrap(rpm_sort(packages))
+                sys.stderr.write(f"-> Found NERVA: {nerva}\n")
+                packages.append(nerva)
+    return ref_wrap(rpm_sort(list(set(packages))))
 
 
 def parse_args():
@@ -103,12 +104,12 @@ def parse_stdin():
 
     package = config.get("source", {}).get("package")
     if not package:
-        sys.stderr.write("Mandatory argument 'package' not defined")
+        sys.stderr.write("Mandatory argument 'package' not defined\n")
         sys.exit(1)
 
     repos = config.get("source", {}).get("repositories")
     if not repos or len(repos) == 0:
-        sys.stderr.write("Mandatory argument 'repositories' not defined")
+        sys.stderr.write("Mandatory argument 'repositories' not defined\n")
         sys.exit(1)
 
     return repos, package
