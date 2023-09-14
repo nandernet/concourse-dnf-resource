@@ -3,6 +3,7 @@ import gzip
 import json
 import logging
 import sys
+import re
 import xml.etree.ElementTree as ET
 from typing import Dict, List
 from xml.etree.ElementTree import Element
@@ -119,7 +120,6 @@ def resource_check() -> None:
 
 def resource_in() -> None:
     repos, package = parse_stdin()
-    sys.stderr.write("Not fully supported yet")
     sys.stdout.write(
         json.dumps({"version": fetch_repodata(repos, package)[-1], "metadata": []})
     )

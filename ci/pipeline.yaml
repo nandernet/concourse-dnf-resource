@@ -76,6 +76,8 @@ jobs:
           type: registry-image
           source:
             repository: concourse/oci-build-task
+            username: ((dockerhub.user))
+            password: ((dockerhub.token))
         inputs:
           - name: concourse-dnf-source
         outputs:
