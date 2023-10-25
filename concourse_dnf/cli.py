@@ -2,11 +2,10 @@ import argparse
 import gzip
 import json
 import logging
-import sys
 import re
+import sys
 import xml.etree.ElementTree as ET
 from typing import Dict, List
-from xml.etree.ElementTree import Element
 
 import requests
 
@@ -15,16 +14,21 @@ log = logging.getLogger(__name__)
 
 # https://stackoverflow.com/a/54985647/877983
 def rpm_sort(elements):
-    """ sort list elements using 'natural sorting': 1.10 > 1.9 etc...
-        taking into account special characters for rpm (~) """
+    """sort list elements using 'natural sorting': 1.10 > 1.9 etc...
+    taking into account special characters for rpm (~)"""
 
     alphabet = "~0123456789abcdefghijklmnopqrstuvwxyz:-."
 
     def convert(text):
-        return [int(text)] if text.isdigit() else ([alphabet.index(letter) for letter in text.lower()] if text else [1])
+        return (
+            [int(text)]
+            if text.isdigit()
+            else ([alphabet.index(letter) for letter in text.lower()] if text else [1])
+        )
 
     def alphanum_key(key):
-        return [convert(c) for c in re.split('([0-9]+)', key)]
+        return [convert(c) for c in re.split("([0-9]+)", key)]
+
     return sorted(elements, key=alphanum_key)
 
 
@@ -72,10 +76,10 @@ def fetch_repodata(repos: List[str], package: str) -> List[Dict[str, str]]:
             pkg_version = pkg.find("common:version", primary_ns).attrib
             if pkg_name == package:
                 nerva = "{}:{}-{}-{}".format(
-                            pkg_name,
-                            pkg_version.get("epoch", 0),
-                            pkg_version.get("ver"),
-                            pkg_version.get("rel"),
+                    pkg_name,
+                    pkg_version.get("epoch", 0),
+                    pkg_version.get("ver"),
+                    pkg_version.get("rel"),
                 )
                 sys.stderr.write(f"-> Found NERVA: {nerva}\n")
                 packages.append(nerva)
@@ -123,9 +127,7 @@ def resource_check() -> None:
 
 def resource_in() -> None:
     repos, package = parse_stdin()
-    sys.stdout.write(
-        json.dumps({"version": fetch_repodata(repos, package)[-1], "metadata": []})
-    )
+    sys.stdout.write(json.dumps({"version": fetch_repodata(repos, package)[-1], "metadata": []}))
 
 
 def resource_out() -> None:

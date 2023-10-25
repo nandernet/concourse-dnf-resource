@@ -12,16 +12,49 @@ check = 'concourse_dnf.cli:resource_check'
 in = 'concourse_dnf.cli:resource_in'
 out = 'concourse_dnf.cli:resource_out'
 
-
 [tool.poetry.dependencies]
 python = "^3.11"
 requests = "^2.31.0"
 
-
 [tool.poetry.group.dev.dependencies]
 black = "^23.7.0"
 isort = "^5.12.0"
+pytest = "^7.4.2"
+flake8 = "^6.1.0"
+flake8-pyproject = "^1.2.3"
+coverage = "^7.3.2"
+
+[tool.flake8]
+max-line-length = 100
+count = true
+
+[tool.black]
+line-length = 100
+
+[tool.isort]
+profile = "black"
+src_paths = ["concourse_dnf", "tests"]
+line_length = 100
+known_first_party = ["concourse_dnf"]
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.tox]
+# 3.11 as current, 3.12 as future
+legacy_tox_ini = """
+    [tox]
+    isolated_build = true
+    env_list =
+        py311
+        py312
+
+    [testenv]
+    skip_install = true
+    allowlist_externals = poetry
+    commands_pre = 
+        poetry install
+    commands =
+        poetry run coverage run -m pytest tests/ --import-mode importlib
+"""
