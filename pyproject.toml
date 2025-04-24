@@ -15,6 +15,7 @@ out = 'concourse_dnf.cli:resource_out'
 [tool.poetry.dependencies]
 python = "^3.11"
 requests = "^2.31.0"
+zstandard = "^0.23.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.7.0"

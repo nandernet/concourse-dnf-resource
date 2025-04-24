@@ -3,17 +3,24 @@ import gzip
 import json
 import logging
 import re
+import os
 import sys
 import xml.etree.ElementTree as ET
-from typing import Dict, List
+from typing import Dict, List, Tuple, TypeVar
 
 import requests
+import zstandard
+
+P = TypeVar("P")
+
+# Read from the environment in MB
+MAX_OUTPUT_SIZE = int(os.environ.get("MAX_OUTPUT_SIZE", "4000")) * 10**6
 
 log = logging.getLogger(__name__)
 
 
 # https://stackoverflow.com/a/54985647/877983
-def rpm_sort(elements):
+def rpm_sort(elements: List[str]) -> List[str]:
     """sort list elements using 'natural sorting': 1.10 > 1.9 etc...
     taking into account special characters for rpm (~)"""
 
@@ -32,7 +39,7 @@ def rpm_sort(elements):
     return sorted(elements, key=alphanum_key)
 
 
-def fetch_primary(baseurl) -> str:
+def fetch_primary(baseurl: str) -> str:
     repomd_ns = {
         "repo": "http://linux.duke.edu/metadata/repo",
         "rpm": "http://linux.duke.edu/metadata/rpm",
@@ -49,10 +56,14 @@ def fetch_primary(baseurl) -> str:
 
     for entry in tree.findall("repo:data", repomd_ns):
         if entry.attrib.get("type") == "primary":
-            return baseurl + entry.find("repo:location", repomd_ns).attrib.get("href")
+            repo_node = entry.find("repo:location", repomd_ns)
+            if repo_node is not None:
+                return baseurl + repo_node.attrib.get("href", "")
+
+    raise RuntimeError("Could not find 'primary' metadata in repomd")
 
 
-def ref_wrap(packages):
+def ref_wrap(packages: List[P]) -> List[Dict[str, P]]:
     return [{"ref": pkg} for pkg in packages]
 
 
@@ -68,12 +79,24 @@ def fetch_repodata(repos: List[str], package: str) -> List[Dict[str, str]]:
         primary_path = fetch_primary(repo)
 
         primary_r = requests.get(primary_path)
-        primary_xml = gzip.decompress(primary_r.content)
+        if primary_path.endswith(".xml.gz"):
+            primary_xml = gzip.decompress(primary_r.content)
+        elif primary_path.endswith(".xml.zst"):
+            primary_xml = zstandard.decompress(primary_r.content, MAX_OUTPUT_SIZE)
+        elif primary_path.endswith(".xml"):
+            primary_xml = primary_r.content
+        else:
+            raise RuntimeError(f"Don't know how to handle file: '{primary_path}'")
         root = ET.fromstring(primary_xml)
 
         for pkg in root.findall("common:package", primary_ns):
-            pkg_name = pkg.find("common:name", primary_ns).text
-            pkg_version = pkg.find("common:version", primary_ns).attrib
+            pkg_name_node = pkg.find("common:name", primary_ns)
+            pkg_version_node = pkg.find("common:version", primary_ns)
+            if pkg_name_node is None or pkg_version_node is None:
+                raise RuntimeError(f"Invalid package name/version in repo '{repo}'")
+
+            pkg_name = pkg_name_node.text
+            pkg_version = pkg_version_node.attrib
             if pkg_name == package:
                 nerva = "{}:{}-{}-{}".format(
                     pkg_name,
@@ -86,7 +109,7 @@ def fetch_repodata(repos: List[str], package: str) -> List[Dict[str, str]]:
     return ref_wrap(rpm_sort(list(set(packages))))
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="DnfResource",
         description="Concourse-compatible DNF resource checker",
@@ -103,7 +126,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def parse_stdin():
+def parse_stdin() -> Tuple[List[str], str]:
     config = json.load(sys.stdin)
 
     package = config.get("source", {}).get("package")
@@ -127,11 +150,13 @@ def resource_check() -> None:
 
 def resource_in() -> None:
     repos, package = parse_stdin()
-    sys.stdout.write(json.dumps({"version": fetch_repodata(repos, package)[-1], "metadata": []}))
+    sys.stdout.write(
+        json.dumps({"version": fetch_repodata(repos, package)[-1], "metadata": []})
+    )
 
 
 def resource_out() -> None:
-    repos, packages = parse_stdin()
+    # repos, packages = parse_stdin()
     sys.stderr.write("Unsupported action")
     sys.exit(1)
 
