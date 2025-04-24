@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "concourse-dnf"
-version = "0.1.0"
+version = "0.2.0"
 description = "Concourse resource to track changes within dnf/yum repositories"
 authors = ["Nic Anderson <nic@nic-a.net>"]
 license = "Apache-2.0"
