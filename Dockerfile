@@ -1,6 +1,6 @@
 FROM quay.io/fedora/fedora-minimal:latest AS base
 
-ARG VER=0.1.0
+ARG VER=0.2.0
 
 LABEL org.opencontainers.image.authors='Nic Anderson <docker@nic-a.net>' \
       org.opencontainers.image.url='https://github.com/nanderson94/concourse-dnf-resource' \
