@@ -17,7 +17,7 @@ WORKDIR /app
 
 FROM base as builder
 
-RUN pip install poetry
+RUN pip install poetry poetry-plugin-export
 
 COPY . .
 
